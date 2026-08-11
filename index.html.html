@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Section One — Missionary Schedule Sign-Up</title>
+<style>
+  :root{
+    --ink:#1E2A3A;
+    --ink-soft:#3A4759;
+    --paper:#F4F1E6;
+    --paper-raised:#FBF9F2;
+    --gold:#A9822F;
+    --gold-dim:#C9A55C;
+    --teal:#2F6F62;
+    --clay:#B0503A;
+    --slate:#6B7482;
+    --line:#D8D2BF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 0 60px;background:var(--paper);min-height:100vh;}
+
+  /* Letterhead */
+  header.letterhead{
+    background:var(--ink);
+    color:var(--paper);
+    padding:34px 28px 26px;
+    border-bottom:6px double var(--gold-dim);
+  }
+  header.letterhead .org{
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:28px;
+    letter-spacing:0.5px;
+    margin:0 0 2px;
+  }
+  header.letterhead .sub{
+    font-size:13px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--gold-dim);
+    margin:0 0 16px;
+  }
+  header.letterhead .meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px 22px;
+    font-size:12.5px;
+    color:#C9CFD8;
+    border-top:1px solid rgba(255,255,255,0.15);
+    padding-top:12px;
+  }
+  header.letterhead .meta b{color:var(--paper);font-weight:600;}
+
+  .intro{
+    padding:22px 28px 6px;
+  }
+  .intro p{
+    font-size:14.5px;
+    line-height:1.55;
+    color:var(--ink-soft);
+    margin:0 0 10px;
+  }
+  .intro .rules{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    margin:14px 0 4px;
+  }
+  .rule-pill{
+    font-size:12px;
+    letter-spacing:0.3px;
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    padding:6px 12px;
+    border-radius:20px;
+    color:var(--ink-soft);
+  }
+  .rule-pill b{color:var(--teal);}
+
+  .status-bar{
+    margin:18px 28px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:12.5px;
+    color:var(--slate);
+  }
+  .status-bar .refresh-btn{
+    background:none;border:1px solid var(--line);color:var(--ink-soft);
+    padding:5px 10px;border-radius:14px;font-size:12px;cursor:pointer;
+  }
+  .status-bar .refresh-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .status-bar .admin-btn{
+    background:none;border:1px solid var(--line);color:var(--ink-soft);
+    padding:5px 10px;border-radius:14px;font-size:12px;cursor:pointer;
+    margin-left:8px;
+  }
+  .status-bar .admin-btn:hover{border-color:var(--teal);color:var(--teal);}
+
+  .modal-overlay{
+    display:none;
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(30,42,58,0.55);
+    z-index:100;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 16px;
+    overflow-y:auto;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--paper-raised);
+    border-radius:10px;
+    max-width:820px;
+    width:100%;
+    padding:22px 22px 20px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.3);
+  }
+  .modal h2{
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:20px;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  .modal .modal-sub{font-size:12.5px;color:var(--slate);margin:0 0 16px;}
+  .modal-close{
+    float:right;
+    background:none;border:none;font-size:18px;color:var(--slate);cursor:pointer;
+    line-height:1;
+  }
+  .summary-table-wrap{overflow-x:auto;}
+  table.summary-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12.5px;
+  }
+  table.summary-table th, table.summary-table td{
+    text-align:left;
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  table.summary-table th{
+    color:var(--slate);
+    text-transform:uppercase;
+    font-size:10.5px;
+    letter-spacing:0.4px;
+  }
+  table.summary-table tr:last-child td{border-bottom:none;}
+  .modal-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:16px;
+  }
+  .modal-empty{font-size:13px;color:var(--slate);padding:10px 0;}
+
+  /* Missionary card = boarding-pass style */
+  .card{
+    margin:22px 28px 0;
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 1px 2px rgba(30,42,58,0.06);
+  }
+  .card-head{
+    padding:18px 20px 16px;
+    display:flex;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .card-head .name{
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+    font-size:21px;
+    margin:0 0 3px;
+    color:var(--ink);
+  }
+  .card-head .field{
+    font-size:12.5px;
+    color:var(--teal);
+    letter-spacing:0.3px;
+    text-transform:uppercase;
+    font-weight:600;
+  }
+  .card-head .details{
+    font-size:12px;
+    color:var(--slate);
+    margin-top:6px;
+    line-height:1.5;
+  }
+  .card-head .details a{color:var(--slate);}
+
+  .perforation{
+    position:relative;
+    border-top:1px dashed var(--line);
+    margin:0 20px;
+  }
+  .perforation::before,.perforation::after{
+    content:"";
+    position:absolute;top:-8px;
+    width:16px;height:16px;
+    background:var(--ink);
+    border-radius:50%;
+  }
+  .perforation::before{left:-28px;}
+  .perforation::after{right:-28px;}
+
+  .legs{padding:14px 20px 18px;}
+  .leg{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 4px;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .leg:last-child{border-bottom:none;}
+  .leg .datecol{
+    width:96px;
+    flex-shrink:0;
+    font-family:SFMono-Regular,Consolas,Menlo,monospace;
+    font-size:12.5px;
+    color:var(--ink);
+  }
+  .leg .datecol .day{
+    display:block;
+    font-size:11px;
+    color:var(--slate);
+    letter-spacing:0.5px;
+    margin-top:1px;
+  }
+  .leg .status-open{
+    flex:1;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+  }
+  .claim-btn{
+    background:var(--teal);
+    color:#fff;
+    border:none;
+    padding:8px 14px;
+    border-radius:6px;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    letter-spacing:0.2px;
+    white-space:nowrap;
+  }
+  .claim-btn:hover{background:#255950;}
+  .taken-tag{
+    font-size:12px;
+    color:var(--slate);
+  }
+  .taken-tag b{color:var(--ink);}
+  .stamp{
+    font-family:Georgia,serif;
+    font-weight:700;
+    font-size:11px;
+    letter-spacing:1.5px;
+    color:var(--clay);
+    border:2px solid var(--clay);
+    border-radius:5px;
+    padding:2px 7px;
+    transform:rotate(-6deg);
+    display:inline-block;
+    text-transform:uppercase;
+    mix-blend-mode:multiply;
+    opacity:0.9;
+    margin-right:6px;
+  }
+  .release-link{
+    font-size:11px;
+    color:var(--slate);
+    text-decoration:underline;
+    cursor:pointer;
+    margin-left:8px;
+    background:none;border:none;padding:0;
+  }
+
+  /* form panel */
+  .claim-form{
+    margin-top:8px;
+    padding:14px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    display:none;
+  }
+  .claim-form.open{display:block;}
+  .claim-form .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .claim-form input[type=text], .claim-form input[type=email], .claim-form input[type=tel]{
+    flex:1;
+    min-width:150px;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:13.5px;
+    background:#fff;
+  }
+  .claim-form .service-toggle{
+    display:flex;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .service-toggle label{
+    flex:1;
+    text-align:center;
+    padding:9px 6px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    font-size:12.5px;
+    cursor:pointer;
+    color:var(--ink-soft);
+    background:#fff;
+  }
+  .service-toggle input{display:none;}
+  .service-toggle input:checked + span{font-weight:700;}
+  .service-toggle label:has(input:checked){
+    border-color:var(--teal);
+    background:rgba(47,111,98,0.08);
+    color:var(--teal);
+  }
+  .form-actions{display:flex;gap:8px;justify-content:flex-end;}
+  .btn-secondary{
+    background:none;border:1px solid var(--line);color:var(--ink-soft);
+    padding:8px 14px;border-radius:6px;font-size:12.5px;cursor:pointer;
+  }
+  .btn-primary{
+    background:var(--gold);border:none;color:#fff;
+    padding:8px 16px;border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;
+  }
+  .btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+  .form-msg{font-size:12px;margin-top:6px;color:var(--clay);}
+
+  footer{
+    padding:24px 28px 0;
+    font-size:11.5px;
+    color:var(--slate);
+    line-height:1.6;
+  }
+
+  .security-notice{
+    margin:0 20px 14px;
+    padding:11px 13px;
+    background:#FBF1E8;
+    border:1px solid var(--gold-dim);
+    border-left:3px solid var(--clay);
+    border-radius:6px;
+    font-size:12px;
+    line-height:1.5;
+    color:var(--ink-soft);
+  }
+  .security-notice b{color:var(--clay);}
+
+  .ack-row{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    margin-bottom:10px;
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.4;
+  }
+  .ack-row input{margin-top:2px;flex-shrink:0;}
+  @media (max-width:520px){
+    header.letterhead{padding:26px 18px 20px;}
+    .intro, .status-bar, .card, footer{margin-left:0;margin-right:0;}
+    .intro{padding:18px 18px 4px;}
+    .status-bar{margin:16px 18px 0;}
+    .card{margin:18px 18px 0;}
+    footer{padding:20px 18px 0;}
+    .perforation{margin:0 14px;}
+    .perforation::before{left:-22px;}
+    .perforation::after{right:-22px;}
+    .leg .datecol{width:78px;font-size:11.5px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="letterhead">
+    <p class="org">Texas Global Missions</p>
+    <p class="sub">Section One Sectional Schedule &middot; ArkLaTex Area</p>
+    <div class="meta">
+      <span><b>District GM Director:</b> Shane Hayes &middot; 832-315-9275</span>
+      <span><b>Section Rep:</b> Kirk Elmore &middot; kirkjwe@gmail.com</span>
+    </div>
+  </header>
+
+  <div class="intro">
+    <p>Claim a date below to host one of our sectional missionaries for a preaching service or as a lodging host. Slots are first come, first served — once claimed, a date is removed for everyone else.</p>
+    <div class="rules">
+      <span class="rule-pill"><b>First come, first served</b></span>
+      <span class="rule-pill">One church per date</span>
+      <span class="rule-pill">Choose preaching or hosting</span>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span id="summary">Loading availability…</span>
+    <span>
+      <button class="admin-btn" id="summaryBtn">View summary</button>
+      <button class="refresh-btn" id="refreshBtn">Refresh</button>
+    </span>
+  </div>
+
+  <div id="cards"></div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <button class="modal-close" id="modalClose">&times;</button>
+      <h2>Section One Sign-Up Summary</h2>
+      <p class="modal-sub">All confirmed dates across every missionary. Admin view only.</p>
+      <div class="summary-table-wrap" id="summaryTableWrap"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="exportCsvBtn">Export CSV</button>
+        <span id="modalCount" style="font-size:12px;color:var(--slate);"></span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Two fields on this schedule are access-challenged; the specific country is withheld here for security and shared directly with confirmed hosts by the section rep.<br>
+    Trouble claiming a date? Contact Kirk Elmore — kirkjwe@gmail.com.
+  </footer>
+
+</div>
+
+<script>
+const MISSIONARIES = [
+  {
+    id:"kchristian",
+    name:"Kyle Christian",
+    field:"Access-Challenged Field",
+    sensitive:true,
+    phone:"479-556-0096",
+    email:"kchristian@iag.email",
+    travelers:2,
+    travelMethod:"Car",
+    dates:[
+      {date:"2027-02-09", day:"Tue"},
+      {date:"2027-02-10", day:"Wed"},
+      {date:"2027-02-11", day:"Thu"},
+      {date:"2027-02-14", day:"Sun AM"},
+      {date:"2027-02-14", day:"Sun PM"}
+    ]
+  },
+  {
+    id:"kpoole",
+    name:"Karen Poole",
+    field:"Lesotho",
+    sensitive:false,
+    phone:"304-923-8668",
+    email:"kpoole@iag.email",
+    travelers:1,
+    travelMethod:"Car",
+    dates:[
+      {date:"2027-05-18", day:"Tue"},
+      {date:"2027-05-19", day:"Wed"},
+      {date:"2027-05-20", day:"Thu"},
+      {date:"2027-05-23", day:"Sun AM"},
+      {date:"2027-05-23", day:"Sun PM"}
+    ]
+  },
+  {
+    id:"jpace",
+    name:"James Pace",
+    field:"Austria",
+    sensitive:false,
+    phone:null,
+    email:"jpace@iag.email",
+    travelers:4,
+    travelMethod:"Van",
+    dates:[
+      {date:"2027-08-10", day:"Tue"},
+      {date:"2027-08-11", day:"Wed"},
+      {date:"2027-08-12", day:"Thu"},
+      {date:"2027-08-15", day:"Sun AM"},
+      {date:"2027-08-15", day:"Sun PM"}
+    ]
+  },
+  {
+    id:"msedra",
+    name:"Mokhles Sedra",
+    field:"Access-Challenged Field",
+    sensitive:true,
+    phone:null,
+    email:"msedra@iag.email",
+    travelers:2,
+    travelMethod:"Motorhome",
+    dates:[
+      {date:"2027-10-19", day:"Tue"},
+      {date:"2027-10-20", day:"Wed"},
+      {date:"2027-10-21", day:"Thu"},
+      {date:"2027-10-24", day:"Sun AM"},
+      {date:"2027-10-24", day:"Sun PM"}
+    ]
+  }
+];
+
+const SUPABASE_URL = "https://olnjgqcjxhryvmznmoix.supabase.co";
+const SUPABASE_KEY = "sb_publishable_kJpfPSOShSpVnlU2mi8__g_jdZGcBRg";
+const ADMIN_CODE = "TGM2027";
+let claims = {};
+
+function slotId(mId, d){ return mId + "__" + d.date + "__" + d.day.replace(/\s+/g,""); }
+
+function fmtDate(iso){
+  const [y,m,d] = iso.split("-").map(Number);
+  const dt = new Date(y, m-1, d);
+  return dt.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+async function loadClaims(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/signup_state?id=eq.1&select=data`, {
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`
+      }
+    });
+    const json = await res.json();
+    claims = (json && json[0] && json[0].data) ? json[0].data : {};
+  }catch(e){
+    console.error("Load failed", e);
+    claims = claims || {};
+  }
+}
+
+async function saveClaims(){
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/signup_state?id=eq.1`, {
+      method: "PATCH",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify({data: claims})
+    });
+  }catch(e){
+    console.error("Save failed", e);
+  }
+}
+
+function updateSummary(){
+  const total = MISSIONARIES.reduce((n,m)=>n+m.dates.length,0);
+  const takenCount = Object.keys(claims).length;
+  document.getElementById('summary').textContent =
+    `${total - takenCount} of ${total} dates still open`;
+}
+
+function render(){
+  const container = document.getElementById('cards');
+  container.innerHTML = "";
+  MISSIONARIES.forEach(m=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const details = [
+      `${m.travelers} traveling`,
+      `Travel: ${m.travelMethod}`,
+      m.phone ? `Phone: ${m.phone}` : null,
+      `Email: <a href="mailto:${m.email}">${m.email}</a>`
+    ].filter(Boolean).join(' &middot; ');
+
+    const securityNotice = m.sensitive ? `
+      <div class="security-notice">
+        <b>Security notice:</b> this field is access-challenged. If you claim a date for ${m.name.split(' ').slice(-1)[0]}, do not advertise, promote, livestream, or project the service online, and do not name the missionary's field publicly. Announce the service in-house only (bulletin, pulpit, phone tree). This protects ${m.name.split(' ').slice(-1)[0]}'s safety and continued access to the field.
+      </div>` : '';
+
+    card.innerHTML = `
+      <div class="card-head">
+        <div>
+          <p class="name">${m.name}</p>
+          <div class="details">${details}</div>
+        </div>
+        <div class="field">${m.field}${m.sensitive ? ' 🔒' : ''}</div>
+      </div>
+      ${securityNotice}
+      <div class="perforation"></div>
+      <div class="legs"></div>
+    `;
+
+    const legsWrap = card.querySelector('.legs');
+    m.dates.forEach(d=>{
+      const id = slotId(m.id, d);
+      const claim = claims[id];
+      const leg = document.createElement('div');
+      leg.className = 'leg';
+
+      if(claim){
+        leg.innerHTML = `
+          <div class="datecol">${fmtDate(d.date)}<span class="day">${d.day}</span></div>
+          <div class="status-open">
+            <span class="taken-tag"><span class="stamp">${claim.serviceType === 'hosting' ? 'Hosting' : 'Preaching'}</span><b>${claim.church}</b> — ${claim.pastorName}, ${claim.city}</span>
+            <button class="release-link" data-slot="${id}">release</button>
+          </div>
+        `;
+        leg.querySelector('.release-link').addEventListener('click', ()=>handleRelease(id));
+      } else {
+        leg.innerHTML = `
+          <div class="datecol">${fmtDate(d.date)}<span class="day">${d.day}</span></div>
+          <div class="status-open">
+            <span class="taken-tag">Open</span>
+            <button class="claim-btn" data-slot="${id}">Claim this date</button>
+          </div>
+        `;
+        const ackRow = m.sensitive ? `
+          <div class="ack-row">
+            <input type="checkbox" id="ack-${id}">
+            <label for="ack-${id}">I understand this is an access-challenged field and will not advertise, promote, livestream, or project this service online, or name the field publicly.</label>
+          </div>` : '';
+
+        const formDiv = document.createElement('div');
+        formDiv.className = 'claim-form';
+        formDiv.id = 'form-' + id;
+        formDiv.innerHTML = `
+          <div class="service-toggle">
+            <label><input type="radio" name="svc-${id}" value="preaching" checked><span>Preaching Service</span></label>
+            <label><input type="radio" name="svc-${id}" value="hosting"><span>Hosting</span></label>
+          </div>
+          <div class="row">
+            <input type="text" placeholder="Your name" id="name-${id}">
+            <input type="text" placeholder="Church name" id="church-${id}">
+          </div>
+          <div class="row">
+            <input type="tel" placeholder="Phone" id="phone-${id}">
+            <input type="email" placeholder="Email" id="email-${id}">
+          </div>
+          <div class="row">
+            <input type="text" placeholder="Your city" id="city-${id}">
+          </div>
+          ${ackRow}
+          <div class="form-actions">
+            <button class="btn-secondary" data-cancel="${id}">Cancel</button>
+            <button class="btn-primary" data-submit="${id}">Confirm claim</button>
+          </div>
+          <div class="form-msg" id="msg-${id}"></div>
+        `;
+        leg.appendChild(formDiv);
+
+        leg.querySelector('.claim-btn').addEventListener('click', ()=>{
+          document.querySelectorAll('.claim-form.open').forEach(f=>f.classList.remove('open'));
+          formDiv.classList.add('open');
+        });
+        formDiv.querySelector('[data-cancel]').addEventListener('click', ()=>{
+          formDiv.classList.remove('open');
+        });
+        formDiv.querySelector('[data-submit]').addEventListener('click', ()=>handleClaim(m, d, id));
+      }
+      legsWrap.appendChild(leg);
+    });
+
+    container.appendChild(card);
+  });
+  updateSummary();
+}
+
+async function handleClaim(m, d, id){
+  const nameEl = document.getElementById('name-'+id);
+  const churchEl = document.getElementById('church-'+id);
+  const phoneEl = document.getElementById('phone-'+id);
+  const emailEl = document.getElementById('email-'+id);
+  const cityEl = document.getElementById('city-'+id);
+  const msgEl = document.getElementById('msg-'+id);
+  const svc = document.querySelector(`input[name="svc-${id}"]:checked`).value;
+
+  const name = nameEl.value.trim();
+  const church = churchEl.value.trim();
+  const phone = phoneEl.value.trim();
+  const email = emailEl.value.trim();
+  const city = cityEl.value.trim();
+
+  if(!name || !church || !city || (!phone && !email)){
+    msgEl.textContent = "Please fill in your name, church, city, and at least a phone or email.";
+    return;
+  }
+
+  if(m.sensitive){
+    const ackEl = document.getElementById('ack-'+id);
+    if(!ackEl || !ackEl.checked){
+      msgEl.textContent = "Please confirm you understand the access-challenged security notice above before claiming.";
+      return;
+    }
+  }
+
+  const submitBtn = document.querySelector(`[data-submit="${id}"]`);
+  submitBtn.disabled = true;
+  msgEl.textContent = "Checking availability…";
+  msgEl.style.color = "var(--slate)";
+
+  await loadClaims();
+  if(claims[id]){
+    msgEl.textContent = "Sorry — this date was just claimed by another church. Refreshing list…";
+    msgEl.style.color = "var(--clay)";
+    setTimeout(render, 1200);
+    return;
+  }
+
+  claims[id] = {
+    pastorName:name,
+    church:church,
+    phone:phone,
+    email:email,
+    city:city,
+    serviceType:svc,
+    securityAck:m.sensitive ? true : undefined,
+    claimedAt:new Date().toISOString()
+  };
+  await saveClaims();
+  render();
+}
+
+async function handleRelease(id){
+  const code = prompt("Enter admin code to release this date:");
+  if(code !== ADMIN_CODE){
+    if(code !== null) alert("Incorrect code.");
+    return;
+  }
+  await loadClaims();
+  delete claims[id];
+  await saveClaims();
+  render();
+}
+
+async function init(){
+  document.getElementById('summary').textContent = "Loading availability…";
+  await loadClaims();
+  render();
+}
+
+document.getElementById('refreshBtn').addEventListener('click', async ()=>{
+  await loadClaims();
+  render();
+});
+
+function missionaryById(id){
+  return MISSIONARIES.find(m=>m.id===id);
+}
+
+function buildSummaryRows(){
+  const rows = [];
+  Object.keys(claims).forEach(slotId=>{
+    const [mId] = slotId.split('__');
+    const m = missionaryById(mId);
+    const c = claims[slotId];
+    if(!m || !c) return;
+    // find matching date/day from the slot id
+    const parts = slotId.split('__');
+    const dateIso = parts[1];
+    const dEntry = m.dates.find(d => d.date === dateIso && d.day.replace(/\s+/g,'') === parts[2]);
+    rows.push({
+      missionary: m.name,
+      field: m.field,
+      date: dEntry ? fmtDate(dEntry.date) : dateIso,
+      day: dEntry ? dEntry.day : '',
+      serviceType: c.serviceType === 'hosting' ? 'Hosting' : 'Preaching',
+      church: c.church,
+      pastor: c.pastorName,
+      city: c.city,
+      phone: c.phone || '',
+      email: c.email || '',
+      claimedAt: c.claimedAt ? new Date(c.claimedAt).toLocaleString() : ''
+    });
+  });
+  // sort by missionary then date
+  rows.sort((a,b)=> a.missionary.localeCompare(b.missionary) || a.date.localeCompare(b.date));
+  return rows;
+}
+
+function renderSummaryModal(){
+  const rows = buildSummaryRows();
+  const wrap = document.getElementById('summaryTableWrap');
+  const countEl = document.getElementById('modalCount');
+  countEl.textContent = `${rows.length} confirmed`;
+
+  if(rows.length === 0){
+    wrap.innerHTML = `<div class="modal-empty">No dates have been claimed yet.</div>`;
+    return;
+  }
+
+  const headers = ['Missionary','Field','Date','Day','Service','Church','Pastor','City','Phone','Email','Claimed At'];
+  let html = '<table class="summary-table"><thead><tr>' +
+    headers.map(h=>`<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+  rows.forEach(r=>{
+    html += `<tr>
+      <td>${r.missionary}</td>
+      <td>${r.field}</td>
+      <td>${r.date}</td>
+      <td>${r.day}</td>
+      <td>${r.serviceType}</td>
+      <td>${r.church}</td>
+      <td>${r.pastor}</td>
+      <td>${r.city}</td>
+      <td>${r.phone}</td>
+      <td>${r.email}</td>
+      <td>${r.claimedAt}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function exportCsv(){
+  const rows = buildSummaryRows();
+  if(rows.length === 0){
+    alert("No confirmed dates to export yet.");
+    return;
+  }
+  const headers = ['Missionary','Field','Date','Day','Service','Church','Pastor','City','Phone','Email','Claimed At'];
+  const escapeCsv = (val)=>{
+    const s = String(val ?? '');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  };
+  const lines = [headers.join(',')];
+  rows.forEach(r=>{
+    lines.push([r.missionary,r.field,r.date,r.day,r.serviceType,r.church,r.pastor,r.city,r.phone,r.email,r.claimedAt]
+      .map(escapeCsv).join(','));
+  });
+  const csv = lines.join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'section-one-signups.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('summaryBtn').addEventListener('click', async ()=>{
+  const code = prompt("Enter admin code to view the signup summary:");
+  if(code !== ADMIN_CODE){
+    if(code !== null) alert("Incorrect code.");
+    return;
+  }
+  await loadClaims();
+  renderSummaryModal();
+  document.getElementById('modalOverlay').classList.add('open');
+});
+
+document.getElementById('modalClose').addEventListener('click', ()=>{
+  document.getElementById('modalOverlay').classList.remove('open');
+});
+document.getElementById('modalOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'modalOverlay'){
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+});
+document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+
+// light polling so other viewers' claims show up without a manual refresh
+setInterval(async ()=>{
+  if(document.querySelectorAll('.claim-form.open').length === 0){
+    await loadClaims();
+    render();
+  }
+}, 20000);
+
+init();
+</script>
+</body>
+</html>
