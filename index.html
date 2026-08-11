@@ -400,11 +400,11 @@
   </header>
 
   <div class="intro">
-    <p>Claim a date below to host one of our sectional missionaries for a preaching service or as a lodging host. Slots are first come, first served — once claimed, a date is removed for everyone else.</p>
+    <p>Claim a date below to host one of our sectional missionaries — either as a preaching service in your church, or as a meal host (taking the missionary to lunch/dinner and providing an offering). Slots are first come, first served — once claimed, a date is removed for everyone else.</p>
     <div class="rules">
       <span class="rule-pill"><b>First come, first served</b></span>
       <span class="rule-pill">One church per date</span>
-      <span class="rule-pill">Choose preaching or hosting</span>
+      <span class="rule-pill">Choose preaching or meal &amp; offering</span>
     </div>
   </div>
 
@@ -437,7 +437,6 @@
   </footer>
 
 </div>
-
 <script>
 const MISSIONARIES = [
   {
@@ -606,7 +605,7 @@ function render(){
         leg.innerHTML = `
           <div class="datecol">${fmtDate(d.date)}<span class="day">${d.day}</span></div>
           <div class="status-open">
-            <span class="taken-tag"><span class="stamp">${claim.serviceType === 'hosting' ? 'Hosting' : 'Preaching'}</span><b>${claim.church}</b> — ${claim.pastorName}, ${claim.city}</span>
+            <span class="taken-tag"><span class="stamp">${claim.serviceType === 'hosting' ? 'Meal & Offering' : 'Preaching'}</span><b>${claim.church}</b> — ${claim.pastorName}, ${claim.city}</span>
             <button class="release-link" data-slot="${id}">release</button>
           </div>
         `;
@@ -631,7 +630,7 @@ function render(){
         formDiv.innerHTML = `
           <div class="service-toggle">
             <label><input type="radio" name="svc-${id}" value="preaching" checked><span>Preaching Service</span></label>
-            <label><input type="radio" name="svc-${id}" value="hosting"><span>Hosting</span></label>
+            <label><input type="radio" name="svc-${id}" value="hosting"><span>Meal &amp; Offering</span></label>
           </div>
           <div class="row">
             <input type="text" placeholder="Your name" id="name-${id}">
@@ -768,7 +767,7 @@ function buildSummaryRows(){
       field: m.field,
       date: dEntry ? fmtDate(dEntry.date) : dateIso,
       day: dEntry ? dEntry.day : '',
-      serviceType: c.serviceType === 'hosting' ? 'Hosting' : 'Preaching',
+      serviceType: c.serviceType === 'hosting' ? 'Meal & Offering' : 'Preaching',
       church: c.church,
       pastor: c.pastorName,
       city: c.city,
