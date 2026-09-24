@@ -216,14 +216,16 @@
 
   .legs{padding:14px 20px 18px;}
   .leg{
-    display:flex;
-    align-items:center;
-    gap:14px;
     padding:12px 4px;
     border-bottom:1px solid var(--line);
     position:relative;
   }
   .leg:last-child{border-bottom:none;}
+  .leg-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
   .leg .datecol{
     width:96px;
     flex-shrink:0;
@@ -290,6 +292,7 @@
 
   /* form panel */
   .claim-form{
+    width:100%;
     margin-top:8px;
     padding:14px;
     background:var(--paper);
@@ -384,6 +387,13 @@
     .perforation::before{left:-22px;}
     .perforation::after{right:-22px;}
     .leg .datecol{width:78px;font-size:11.5px;}
+    .claim-form .row{flex-direction:column;}
+    .claim-form input[type=text], .claim-form input[type=email], .claim-form input[type=tel]{
+      min-width:0;
+      width:100%;
+    }
+    .service-toggle{flex-direction:column;}
+    .status-open{flex-wrap:wrap;}
   }
 </style>
 </head>
@@ -530,11 +540,14 @@ async function loadClaims(){
         Authorization: `Bearer ${SUPABASE_KEY}`
       }
     });
+    if(!res.ok) throw new Error("HTTP " + res.status);
     const json = await res.json();
     claims = (json && json[0] && json[0].data) ? json[0].data : {};
+    return true;
   }catch(e){
     console.error("Load failed", e);
     claims = claims || {};
+    return false;
   }
 }
 
@@ -552,6 +565,50 @@ async function saveClaims(){
     });
   }catch(e){
     console.error("Save failed", e);
+  }
+}
+
+// Atomic claim: only succeeds server-side if the slot is still open.
+// Returns true if claimed, false if someone else already holds it, null on error.
+async function claimSlotAtomic(id, claimData){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/claim_slot`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({p_slot_id: id, p_claim: claimData})
+    });
+    if(!res.ok){
+      console.error("claim_slot HTTP error", res.status, await res.text());
+      return null;
+    }
+    const result = await res.json();
+    // Postgres returns true, or null/false if the WHERE clause excluded the row
+    return result === true;
+  }catch(e){
+    console.error("claim_slot failed", e);
+    return null;
+  }
+}
+
+async function releaseSlotAtomic(id){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/release_slot`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({p_slot_id: id})
+    });
+    return res.ok;
+  }catch(e){
+    console.error("release_slot failed", e);
+    return false;
   }
 }
 
@@ -603,19 +660,23 @@ function render(){
 
       if(claim){
         leg.innerHTML = `
-          <div class="datecol">${fmtDate(d.date)}<span class="day">${d.day}</span></div>
-          <div class="status-open">
-            <span class="taken-tag"><span class="stamp">${claim.serviceType === 'hosting' ? 'Meal & Offering' : 'Preaching'}</span><b>${claim.church}</b> — ${claim.pastorName}, ${claim.city}</span>
-            <button class="release-link" data-slot="${id}">release</button>
+          <div class="leg-row">
+            <div class="datecol">${fmtDate(d.date)}<span class="day">${d.day}</span></div>
+            <div class="status-open">
+              <span class="taken-tag"><span class="stamp">${claim.serviceType === 'hosting' ? 'Meal & Offering' : 'Preaching'}</span><b>${claim.church}</b> — ${claim.pastorName}, ${claim.city}</span>
+              <button class="release-link" data-slot="${id}">release</button>
+            </div>
           </div>
         `;
         leg.querySelector('.release-link').addEventListener('click', ()=>handleRelease(id));
       } else {
         leg.innerHTML = `
-          <div class="datecol">${fmtDate(d.date)}<span class="day">${d.day}</span></div>
-          <div class="status-open">
-            <span class="taken-tag">Open</span>
-            <button class="claim-btn" data-slot="${id}">Claim this date</button>
+          <div class="leg-row">
+            <div class="datecol">${fmtDate(d.date)}<span class="day">${d.day}</span></div>
+            <div class="status-open">
+              <span class="taken-tag">Open</span>
+              <button class="claim-btn" data-slot="${id}">Claim this date</button>
+            </div>
           </div>
         `;
         const ackRow = m.sensitive ? `
@@ -686,6 +747,7 @@ async function handleClaim(m, d, id){
 
   if(!name || !church || !city || (!phone && !email)){
     msgEl.textContent = "Please fill in your name, church, city, and at least a phone or email.";
+    msgEl.style.color = "var(--clay)";
     return;
   }
 
@@ -693,24 +755,17 @@ async function handleClaim(m, d, id){
     const ackEl = document.getElementById('ack-'+id);
     if(!ackEl || !ackEl.checked){
       msgEl.textContent = "Please confirm you understand the access-challenged security notice above before claiming.";
+      msgEl.style.color = "var(--clay)";
       return;
     }
   }
 
   const submitBtn = document.querySelector(`[data-submit="${id}"]`);
   submitBtn.disabled = true;
-  msgEl.textContent = "Checking availability…";
+  msgEl.textContent = "Submitting…";
   msgEl.style.color = "var(--slate)";
 
-  await loadClaims();
-  if(claims[id]){
-    msgEl.textContent = "Sorry — this date was just claimed by another church. Refreshing list…";
-    msgEl.style.color = "var(--clay)";
-    setTimeout(render, 1200);
-    return;
-  }
-
-  claims[id] = {
+  const claimData = {
     pastorName:name,
     church:church,
     phone:phone,
@@ -720,8 +775,28 @@ async function handleClaim(m, d, id){
     securityAck:m.sensitive ? true : undefined,
     claimedAt:new Date().toISOString()
   };
-  await saveClaims();
-  render();
+
+  const result = await claimSlotAtomic(id, claimData);
+
+  if(result === true){
+    // success — reflect locally and re-render
+    claims[id] = claimData;
+    render();
+    return;
+  }
+
+  if(result === false){
+    msgEl.textContent = "Sorry — this date was just claimed by another church. Refreshing list…";
+    msgEl.style.color = "var(--clay)";
+    await loadClaims();
+    setTimeout(render, 1200);
+    return;
+  }
+
+  // result === null → something went wrong talking to the database
+  msgEl.textContent = "Couldn't reach the sign-up database. Please check your connection and try again — your claim was NOT saved.";
+  msgEl.style.color = "var(--clay)";
+  submitBtn.disabled = false;
 }
 
 async function handleRelease(id){
@@ -730,16 +805,24 @@ async function handleRelease(id){
     if(code !== null) alert("Incorrect code.");
     return;
   }
-  await loadClaims();
+  const ok = await releaseSlotAtomic(id);
+  if(!ok){
+    alert("Couldn't reach the database — the date was not released. Please try again.");
+    return;
+  }
   delete claims[id];
-  await saveClaims();
   render();
 }
 
 async function init(){
   document.getElementById('summary').textContent = "Loading availability…";
-  await loadClaims();
+  const ok = await loadClaims();
   render();
+  if(!ok){
+    document.getElementById('summary').textContent =
+      "⚠️ Couldn't load current availability — check your connection and refresh before claiming a date.";
+    document.getElementById('summary').style.color = "var(--clay)";
+  }
 }
 
 document.getElementById('refreshBtn').addEventListener('click', async ()=>{
