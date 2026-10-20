@@ -442,7 +442,7 @@
   </div>
 
   <footer>
-    Two fields on this schedule are access-challenged; the specific country is withheld here for security and shared directly with confirmed hosts by the section rep.<br>
+    Three fields on this schedule are access-challenged; the specific country is withheld here for security and shared directly with confirmed hosts by the section rep.<br>
     Trouble claiming a date? Contact Kirk Elmore — kirkjwe@gmail.com.
   </footer>
 
@@ -467,13 +467,13 @@ const MISSIONARIES = [
     ]
   },
   {
-    id:"kpoole",
-    name:"Karen Poole",
-    field:"Lesotho",
-    sensitive:false,
-    phone:"304-923-8668",
-    email:"kpoole@iag.email",
-    travelers:1,
+    id:"kpoole", // id kept the same on purpose so existing sign-ups carry over to the new missionary
+    name:"Joseph Quexada",
+    field:"Access-Challenged Field",
+    sensitive:true,
+    phone:"207-830-3396",
+    email:"gglobalquest4@gmail.com",
+    travelers:4,
     travelMethod:"Car",
     dates:[
       {date:"2027-05-18", day:"Tue"},
@@ -628,7 +628,7 @@ function render(){
 
     const details = [
       `${m.travelers} traveling`,
-      `Travel: ${m.travelMethod}`,
+      m.travelMethod ? `Travel: ${m.travelMethod}` : null,
       m.phone ? `Phone: ${m.phone}` : null,
       `Email: <a href="mailto:${m.email}">${m.email}</a>`
     ].filter(Boolean).join(' &middot; ');
